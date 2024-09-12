@@ -8,12 +8,33 @@ const generateToken = (req, res, user) => {
   const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
     expiresIn: 1 * 24 * 60 * 60,
   });
-  console.log(token);
   res.cookie('token', token, {
     maxAge: 1 * 24 * 60 * 60 * 1000,
     httpOnly: true,
   });
   res.status(200).send(user);
+};
+
+export const randomPost = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const { id } = jwt.verify(token, process.env.SECRET_KEY);
+
+    const user = await User.findOne({
+      where: {
+        id,
+      },
+    });
+    const { userName, email } = user.dataValues;
+    const data = {
+      userName,
+      email,
+    };
+    res.status(200).send(data);
+  } catch (error) {
+    console.log(error.message);
+    res.status(409).send('invalid token');
+  }
 };
 
 export const signup = async (req, res) => {
